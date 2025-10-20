@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\TodoStatus;
@@ -12,7 +11,6 @@ class Todo extends Model
 {
     /** @use HasFactory<\Database\Factories\TodoFactory> */
     use HasFactory;
-    use HasUuids;
     use SoftDeletes;
 
     /**
