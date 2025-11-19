@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTodoRequest;
 use App\Http\Requests\UpdateTodoRequest;
 use App\Http\Resources\TodoResource;
+use App\Models\Todo;
+use App\Models\User;
 use App\Services\TodoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -21,8 +23,10 @@ class TodoController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Todo::class);
+
         $filters = $request->only(['status', 'priority', 'due_before', 'due_after', 'search', 'per_page']);
-        $todos = $this->service->paginate($filters);
+        $todos = $this->service->paginate($this->resolveUser($request), $filters);
 
         return TodoResource::collection($todos)
             ->additional([
@@ -43,7 +47,9 @@ class TodoController extends Controller
      */
     public function store(StoreTodoRequest $request)
     {
-        $todo = $this->service->create($request->validated());
+        $this->authorize('create', Todo::class);
+
+        $todo = $this->service->create($this->resolveUser($request), $request->validated());
 
         return (new TodoResource($todo))
             ->response()
@@ -56,6 +62,7 @@ class TodoController extends Controller
     public function show(string $todo)
     {
         $foundTodo = $this->service->findByUuid($todo);
+        $this->authorize('view', $foundTodo);
 
         return new TodoResource($foundTodo);
     }
@@ -73,7 +80,10 @@ class TodoController extends Controller
      */
     public function update(UpdateTodoRequest $request, string $todo)
     {
-        $updated = $this->service->update($todo, $request->validated());
+        $existing = $this->service->findByUuid($todo);
+        $this->authorize('update', $existing);
+
+        $updated = $this->service->update($existing, $request->validated());
 
         return new TodoResource($updated);
     }
@@ -83,8 +93,22 @@ class TodoController extends Controller
      */
     public function destroy(string $todo)
     {
-        $this->service->delete($todo);
+        $existing = $this->service->findByUuid($todo);
+        $this->authorize('delete', $existing);
+
+        $this->service->delete($existing);
 
         return response()->noContent();
+    }
+
+    private function resolveUser(Request $request): User
+    {
+        $user = $request->user();
+
+        if (! $user instanceof User) {
+            abort(Response::HTTP_UNAUTHORIZED, 'Unauthenticated.');
+        }
+
+        return $user;
     }
 }

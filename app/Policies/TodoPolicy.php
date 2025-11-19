@@ -2,9 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Todo;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class TodoPolicy
 {
@@ -13,7 +13,7 @@ class TodoPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->isAdmin() || $user->hasRole(UserRole::User);
     }
 
     /**
@@ -21,7 +21,7 @@ class TodoPolicy
      */
     public function view(User $user, Todo $todo): bool
     {
-        return false;
+        return $this->ownsTodo($user, $todo);
     }
 
     /**
@@ -29,7 +29,7 @@ class TodoPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->isAdmin() || $user->hasRole(UserRole::User);
     }
 
     /**
@@ -37,7 +37,7 @@ class TodoPolicy
      */
     public function update(User $user, Todo $todo): bool
     {
-        return false;
+        return $this->ownsTodo($user, $todo);
     }
 
     /**
@@ -45,7 +45,7 @@ class TodoPolicy
      */
     public function delete(User $user, Todo $todo): bool
     {
-        return false;
+        return $this->ownsTodo($user, $todo);
     }
 
     /**
@@ -53,7 +53,7 @@ class TodoPolicy
      */
     public function restore(User $user, Todo $todo): bool
     {
-        return false;
+        return $this->ownsTodo($user, $todo);
     }
 
     /**
@@ -61,6 +61,11 @@ class TodoPolicy
      */
     public function forceDelete(User $user, Todo $todo): bool
     {
-        return false;
+        return $user->isAdmin();
+    }
+
+    private function ownsTodo(User $user, Todo $todo): bool
+    {
+        return $user->isAdmin() || $todo->user_id === $user->id;
     }
 }

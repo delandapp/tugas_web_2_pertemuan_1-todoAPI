@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\TodoStatus;
 use App\Models\Todo;
+use App\Models\User;
 use App\Repositories\TodoRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -17,21 +18,22 @@ class TodoService
     ) {
     }
 
-    public function paginate(array $filters = []): LengthAwarePaginator
+    public function paginate(User $user, array $filters = []): LengthAwarePaginator
     {
         $perPage = $this->sanitizePerPage($filters['per_page'] ?? null);
 
-        return $this->repository->paginate($filters, $perPage);
+        return $this->repository->paginate($user, $filters, $perPage);
     }
 
-    public function getAll(array $filters = []): Collection
+    public function getAll(User $user, array $filters = []): Collection
     {
-        return $this->repository->all($filters);
+        return $this->repository->all($user, $filters);
     }
 
-    public function create(array $payload): Todo
+    public function create(User $user, array $payload): Todo
     {
         $attributes = $this->prepareAttributes($payload);
+        $attributes['user_id'] = $user->id;
 
         return $this->repository->create($attributes);
     }
@@ -41,17 +43,15 @@ class TodoService
         return $this->repository->findByUuid($uuid);
     }
 
-    public function update(string $uuid, array $payload): Todo
+    public function update(Todo $todo, array $payload): Todo
     {
-        $todo = $this->repository->findByUuid($uuid);
         $attributes = $this->prepareAttributes($payload, $todo);
 
         return $this->repository->update($todo, $attributes);
     }
 
-    public function delete(string $uuid): void
+    public function delete(Todo $todo): void
     {
-        $todo = $this->repository->findByUuid($uuid);
         $this->repository->delete($todo);
     }
 

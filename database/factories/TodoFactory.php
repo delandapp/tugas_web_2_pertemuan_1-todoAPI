@@ -2,8 +2,9 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Enums\TodoStatus;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Todo>
@@ -29,6 +30,7 @@ class TodoFactory extends Factory
             'completed_at' => in_array($status, [TodoStatus::Completed->value, TodoStatus::Archived->value], true)
                 ? fake()->dateTimeBetween('-1 month', 'now')
                 : null,
+            'user_id' => User::factory(),
         ];
     }
 }

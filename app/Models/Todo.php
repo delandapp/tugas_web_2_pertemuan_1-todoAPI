@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\TodoStatus;
 
@@ -26,6 +27,7 @@ class Todo extends Model
         'priority',
         'due_date',
         'completed_at',
+        'user_id',
     ];
 
     /**
@@ -61,5 +63,10 @@ class Todo extends Model
                         ->orWhere('description', 'like', '%' . $term . '%');
                 });
             });
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
